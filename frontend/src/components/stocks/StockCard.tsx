@@ -1,4 +1,5 @@
 import type { StockQuote } from "@/types/stock";
+import StockChart from "@/components/stocks/StockChart";
 
 interface StockCardProps {
   stock: StockQuote;
@@ -65,6 +66,7 @@ export default function StockCard({ stock }: StockCardProps) {
           </p>
         </div>
       </div>
+      <StockChart symbol={stock.symbol} />
     </section>
   );
 }
