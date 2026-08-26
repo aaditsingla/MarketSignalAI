@@ -1,5 +1,4 @@
-import StockSearch from "@/components/stocks/StockSearch";
-import Watchlist from "@/components/watchlist/Watchlist";
+import MarketDashboard from "@/components/dashboard/MarketDashboard";
 
 export default function Home() {
   return (
@@ -10,9 +9,7 @@ export default function Home() {
         AI-powered market intelligence and trading education.
       </p>
 
-      <Watchlist />
-
-      <StockSearch />
+      <MarketDashboard />
     </main>
   );
 }

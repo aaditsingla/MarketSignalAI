@@ -3,14 +3,27 @@
 import { FormEvent, useState } from "react";
 
 import StockCard from "@/components/stocks/StockCard";
-import { getStockQuote } from "@/services/api";
+import {
+  addToWatchlist,
+  getStockQuote,
+} from "@/services/api";
 import type { StockQuote } from "@/types/stock";
 
-export default function StockSearch() {
+interface StockSearchProps {
+  onWatchlistChanged: () => void;
+}
+
+export default function StockSearch({
+  onWatchlistChanged,
+}: StockSearchProps) {
   const [symbol, setSymbol] = useState("");
   const [stock, setStock] = useState<StockQuote | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [watchlistMessage, setWatchlistMessage] = useState("");
+
+  
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,15 +38,38 @@ export default function StockSearch() {
     try {
       setIsLoading(true);
       setError("");
+      setWatchlistMessage("");
 
       const stockData = await getStockQuote(trimmedSymbol);
 
       setStock(stockData);
     } catch {
       setStock(null);
-      setError(`Could not find stock data for ${trimmedSymbol.toUpperCase()}.`);
+      setError(
+        `Could not find stock data for ${trimmedSymbol.toUpperCase()}.`,
+      );
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleAddToWatchlist(stockSymbol: string) {
+    try {
+      setIsAdding(true);
+      setWatchlistMessage("");
+
+      await addToWatchlist(stockSymbol);
+      onWatchlistChanged(); 
+
+      setWatchlistMessage(
+        `${stockSymbol} added to your watchlist.`,
+      );
+    } catch {
+      setWatchlistMessage(
+        `${stockSymbol} is already in your watchlist or could not be added.`,
+      );
+    } finally {
+      setIsAdding(false);
     }
   }
 
@@ -63,7 +99,14 @@ export default function StockSearch() {
         </p>
       )}
 
-      {stock && <StockCard stock={stock} />}
+      {stock && (
+        <StockCard
+          stock={stock}
+          onAddToWatchlist={handleAddToWatchlist}
+          isAdding={isAdding}
+          watchlistMessage={watchlistMessage}
+        />
+      )}
     </section>
   );
 }

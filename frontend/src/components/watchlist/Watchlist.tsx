@@ -15,6 +15,8 @@ interface WatchlistStock {
   quote: StockQuote | null;
 }
 
+
+
 async function fetchWatchlistStocks(): Promise<WatchlistStock[]> {
   const watchlist = await getWatchlist();
 
