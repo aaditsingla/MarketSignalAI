@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import StockCard from "@/components/stocks/StockCard";
 import {
@@ -23,7 +23,26 @@ export default function StockSearch({
   const [isAdding, setIsAdding] = useState(false);
   const [watchlistMessage, setWatchlistMessage] = useState("");
 
-  
+  const activeSymbol = stock?.symbol ?? null;
+
+  useEffect(() => {
+    if (!activeSymbol) {
+      return;
+    }
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const refreshedStock = await getStockQuote(activeSymbol);
+        setStock(refreshedStock);
+      } catch {
+        // Keep showing the last successful quote if refresh fails.
+      }
+    }, 60000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [activeSymbol]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,7 +78,8 @@ export default function StockSearch({
       setWatchlistMessage("");
 
       await addToWatchlist(stockSymbol);
-      onWatchlistChanged(); 
+
+      onWatchlistChanged();
 
       setWatchlistMessage(
         `${stockSymbol} added to your watchlist.`,

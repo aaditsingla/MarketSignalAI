@@ -15,8 +15,6 @@ interface WatchlistStock {
   quote: StockQuote | null;
 }
 
-
-
 async function fetchWatchlistStocks(): Promise<WatchlistStock[]> {
   const watchlist = await getWatchlist();
 
@@ -68,8 +66,13 @@ export default function Watchlist() {
 
     void loadInitialWatchlist();
 
+    const intervalId = window.setInterval(() => {
+      void loadInitialWatchlist();
+    }, 60000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(intervalId);
     };
   }, []);
 
