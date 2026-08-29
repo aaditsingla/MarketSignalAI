@@ -1,4 +1,5 @@
 from app.database.connection import Base, engine
+from app.database.models.analysis import AnalysisArticle, CompanyAnalysis
 from app.database.models.news import ArticleTicker, NewsArticle
 from app.database.models.sentiment import ArticleSentiment
 from app.database.models.watchlist import WatchlistItem
