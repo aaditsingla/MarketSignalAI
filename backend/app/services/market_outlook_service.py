@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.models.event_sentiment import EventSentimentResult
 from app.models.market_outlook import (
     MarketOutlookResult,
     OutlookEvent,
@@ -15,7 +16,6 @@ class MarketOutlookService:
     RECENCY_HALF_LIFE_HOURS = 72.0
 
     MAX_ITEMS_PER_GROUP = 3
-
     MIN_DIRECTIONAL_STRENGTH = 0.10
 
     FUNDAMENTAL_CATEGORIES = {
@@ -48,6 +48,18 @@ class MarketOutlookService:
             database,
             normalized_symbol,
         )
+
+        return self.build_from_events(
+            normalized_symbol,
+            events,
+        )
+
+    def build_from_events(
+        self,
+        symbol: str,
+        events: list[EventSentimentResult],
+    ) -> MarketOutlookResult:
+        normalized_symbol = symbol.upper().strip()
 
         now = datetime.now(timezone.utc)
 
@@ -140,28 +152,20 @@ class MarketOutlookService:
                         )
                     )
 
-        positive_catalysts = self._top_events(
-            positive_catalysts
-        )
-
-        negative_risks = self._top_events(
-            negative_risks
-        )
-
-        positive_signals = self._top_events(
-            positive_signals
-        )
-
-        negative_signals = self._top_events(
-            negative_signals
-        )
-
         return MarketOutlookResult(
             symbol=normalized_symbol,
-            positive_catalysts=positive_catalysts,
-            negative_risks=negative_risks,
-            positive_signals=positive_signals,
-            negative_signals=negative_signals,
+            positive_catalysts=self._top_events(
+                positive_catalysts
+            ),
+            negative_risks=self._top_events(
+                negative_risks
+            ),
+            positive_signals=self._top_events(
+                positive_signals
+            ),
+            negative_signals=self._top_events(
+                negative_signals
+            ),
             events_analyzed=len(events),
         )
 

@@ -4,6 +4,7 @@ from app.database.models.analysis import (
     AnalysisArticle,
     CompanyAnalysis,
 )
+from app.models.company_sentiment import CompanySentimentResult
 from app.services.company_sentiment_service import (
     CompanySentimentService,
 )
@@ -27,12 +28,22 @@ class CompanyAnalysisService:
             normalized_symbol,
         )
 
+        return self.create_analysis_from_sentiment(
+            database,
+            sentiment,
+        )
+
+    def create_analysis_from_sentiment(
+        self,
+        database: Session,
+        sentiment: CompanySentimentResult,
+    ) -> CompanyAnalysis:
         stock = self.market_service.get_stock_quote(
-            normalized_symbol
+            sentiment.symbol
         )
 
         analysis = CompanyAnalysis(
-            symbol=normalized_symbol,
+            symbol=sentiment.symbol,
             stock_price=stock.price,
             signal=sentiment.signal,
             confidence=sentiment.confidence,

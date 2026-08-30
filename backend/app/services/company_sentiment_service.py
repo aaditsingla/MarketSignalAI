@@ -6,6 +6,7 @@ from app.models.company_sentiment import (
     ArticleWeightResult,
     CompanySentimentResult,
 )
+from app.models.event_sentiment import EventSentimentResult
 from app.services.event_sentiment_service import (
     EventSentimentService,
 )
@@ -36,6 +37,18 @@ class CompanySentimentService:
             )
         )
 
+        return self.analyze_from_events(
+            normalized_symbol,
+            events,
+        )
+
+    def analyze_from_events(
+        self,
+        symbol: str,
+        events: list[EventSentimentResult],
+    ) -> CompanySentimentResult:
+        normalized_symbol = symbol.upper().strip()
+
         if not events:
             raise ValueError(
                 f"No analyzed events available for "
@@ -44,7 +57,10 @@ class CompanySentimentService:
 
         now = datetime.now(timezone.utc)
 
-        event_data = []
+        event_data: list[
+            tuple[EventSentimentResult, float]
+        ] = []
+
         total_weight = 0.0
 
         for event in events:
@@ -61,7 +77,8 @@ class CompanySentimentService:
             age_hours = max(
                 (
                     now - event_time
-                ).total_seconds() / 3600,
+                ).total_seconds()
+                / 3600,
                 0.0,
             )
 
@@ -115,8 +132,7 @@ class CompanySentimentService:
                 continue
 
             article_weight = (
-                event_weight
-                / analyzed_count
+                event_weight / analyzed_count
             )
 
             for article_id in (
@@ -173,20 +189,16 @@ class CompanySentimentService:
         if (
             sentiment_score
             >= self.BULLISH_THRESHOLD
-            and positive_score
-            > neutral_score
-            and positive_score
-            > negative_score
+            and positive_score > neutral_score
+            and positive_score > negative_score
         ):
             return "bullish"
 
         if (
             sentiment_score
             <= self.BEARISH_THRESHOLD
-            and negative_score
-            > neutral_score
-            and negative_score
-            > positive_score
+            and negative_score > neutral_score
+            and negative_score > positive_score
         ):
             return "bearish"
 

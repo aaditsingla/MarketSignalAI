@@ -2,6 +2,8 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.models.company_sentiment import CompanySentimentResult
+from app.models.event_sentiment import EventSentimentResult
 from app.models.signal_summary import SignalSummaryResult
 from app.services.company_sentiment_service import (
     CompanySentimentService,
@@ -28,15 +30,31 @@ class SignalSummaryService:
     ) -> SignalSummaryResult:
         normalized_symbol = symbol.upper().strip()
 
-        company = self.company_service.analyze_company(
-            database,
-            normalized_symbol,
-        )
-
         events = self.event_service.analyze_events(
             database,
             normalized_symbol,
         )
+
+        company = (
+            self.company_service.analyze_from_events(
+                normalized_symbol,
+                events,
+            )
+        )
+
+        return self.build_from_results(
+            normalized_symbol,
+            company,
+            events,
+        )
+
+    def build_from_results(
+        self,
+        symbol: str,
+        company: CompanySentimentResult,
+        events: list[EventSentimentResult],
+    ) -> SignalSummaryResult:
+        normalized_symbol = symbol.upper().strip()
 
         agreement_score = self._calculate_agreement(
             events
@@ -71,7 +89,7 @@ class SignalSummaryService:
 
     def _calculate_agreement(
         self,
-        events,
+        events: list[EventSentimentResult],
     ) -> float:
         if not events:
             return 0.0
@@ -106,11 +124,13 @@ class SignalSummaryService:
             )
 
             weighted_direction += (
-                event.directional_score * weight
+                event.directional_score
+                * weight
             )
 
             weighted_magnitude += (
-                abs(event.directional_score) * weight
+                abs(event.directional_score)
+                * weight
             )
 
         if weighted_magnitude == 0:
