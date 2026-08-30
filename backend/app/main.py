@@ -1,14 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.watchlist import router as watchlist_router
+
+from app.api.analysis import router as analysis_router
 from app.api.health import router as health_router
 from app.api.stocks import router as stocks_router
+from app.api.watchlist import router as watchlist_router
+
 
 app = FastAPI(
     title="MarketSignal AI",
-    description="AI-powered market intelligence and trading education platform",
+    description=(
+        "AI-powered market intelligence "
+        "and trading education platform"
+    ),
     version="0.1.0",
 )
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(health_router)
 app.include_router(stocks_router)
 app.include_router(watchlist_router)
+app.include_router(analysis_router)
