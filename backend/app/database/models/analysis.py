@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.connection import Base
+from app.database.models.news import NewsArticle
 
 
 class CompanyAnalysis(Base):
@@ -98,8 +101,8 @@ class AnalysisArticle(Base):
         nullable=False,
     )
 
-    analysis: Mapped[CompanyAnalysis] = relationship(
+    analysis: Mapped["CompanyAnalysis"] = relationship(
         back_populates="articles",
     )
 
-    article = relationship("NewsArticle")
+    article: Mapped["NewsArticle"] = relationship()

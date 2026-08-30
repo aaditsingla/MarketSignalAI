@@ -1,15 +1,15 @@
 from datetime import datetime, timezone
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 from app.database.models.news import NewsArticle
 from app.models.news_event import NewsEventGroup
+from app.services.model_registry import (
+    get_event_embedding_model,
+)
 
 
 class NewsEventService:
-    MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-
     STRONG_TITLE_THRESHOLD = 0.76
 
     MODERATE_TITLE_THRESHOLD = 0.64
@@ -18,17 +18,9 @@ class NewsEventService:
     MAX_EVENT_SPAN_HOURS = 48.0
     LEAD_LENGTH = 350
 
-    def __init__(self) -> None:
-        self._model: SentenceTransformer | None = None
-
     @property
-    def model(self) -> SentenceTransformer:
-        if self._model is None:
-            self._model = SentenceTransformer(
-                self.MODEL_NAME
-            )
-
-        return self._model
+    def model(self):
+        return get_event_embedding_model()
 
     def group_articles(
         self,

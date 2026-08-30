@@ -10,6 +10,9 @@ class EventSentimentResult(BaseModel):
     article_ids: list[int]
     analyzed_article_ids: list[int]
 
+    category: str
+    category_score: float
+
     positive_score: float
     neutral_score: float
     negative_score: float

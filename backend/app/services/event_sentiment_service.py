@@ -6,14 +6,19 @@ from sqlalchemy.orm import Session
 from app.database.models.news import ArticleTicker, NewsArticle
 from app.database.models.sentiment import ArticleSentiment
 from app.models.event_sentiment import EventSentimentResult
+from app.services.event_classification_service import (
+    EventClassificationService,
+)
 from app.services.news_event_service import NewsEventService
 
 
 class EventSentimentService:
     LOOKBACK_HOURS = 168.0
+    CLASSIFICATION_EXCERPT_LENGTH = 500
 
     def __init__(self) -> None:
         self.event_service = NewsEventService()
+        self.classification_service = EventClassificationService()
 
     def analyze_events(
         self,
@@ -108,6 +113,19 @@ class EventSentimentService:
             if not event_sentiments:
                 continue
 
+            classification_text = (
+                self._build_classification_text(
+                    group.article_ids,
+                    article_lookup,
+                )
+            )
+
+            classification = (
+                self.classification_service.classify(
+                    classification_text
+                )
+            )
+
             sentiment_count = len(event_sentiments)
 
             positive_score = (
@@ -150,6 +168,8 @@ class EventSentimentService:
                     analyzed_article_ids=(
                         analyzed_article_ids
                     ),
+                    category=classification.category,
+                    category_score=classification.score,
                     positive_score=positive_score,
                     neutral_score=neutral_score,
                     negative_score=negative_score,
@@ -167,3 +187,24 @@ class EventSentimentService:
             )
 
         return results
+
+    def _build_classification_text(
+        self,
+        article_ids: list[int],
+        article_lookup: dict[int, NewsArticle],
+    ) -> str:
+        parts: list[str] = []
+
+        for article_id in article_ids:
+            article = article_lookup[article_id]
+
+            parts.append(article.title)
+
+            if article.content:
+                parts.append(
+                    article.content[
+                        :self.CLASSIFICATION_EXCERPT_LENGTH
+                    ]
+                )
+
+        return "\n".join(parts)
